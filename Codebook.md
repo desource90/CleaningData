@@ -1,6 +1,5 @@
 ---
-title: "Codebook"
-output: html_document
+Title: "Codebook"
 ---
 
 The tidy dataset summarizes the data by giving the average of each measurement for a particular
