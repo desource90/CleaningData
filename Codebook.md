@@ -14,7 +14,7 @@ activity conducted by the study participant.
 + XYZ - represents the 3-dimensions of the possible movement/measurement.
 + Jerk - Jerk signals
 
-The variables in this dataset are separated into three to four sections. 
+The variable names in this dataset are separated into three to four sections. The casing of the variable names from the original dataset are preserved for the purposes of being easier to read. The underscores are included for the same reason.
 
 # Example 1
 
