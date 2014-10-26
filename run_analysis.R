@@ -130,4 +130,3 @@ Summary_Data <- Merged_Data %>%
 colnames(Summary_Data) <- colnames(Summary_Data) %>%
       str_replace("_mean","_mean_of_means") %>%
       str_replace("_std","_mean_of_std")
-      
