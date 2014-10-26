@@ -30,6 +30,7 @@ fBodyGyroJerkMag_mean_of_std - Mean of the standard deviation of the magnitude o
 
 + f - frequency
 + BodyGyro - Rotation of the body
++ JerkMag - Magnitude of the jerk signal
 + mean_of_std - average of the standard deviation
 
 
