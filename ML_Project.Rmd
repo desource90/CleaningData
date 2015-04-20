@@ -1,0 +1,109 @@
+---
+title: "Machine Learning Project"
+output:
+  html_document:
+    fig_caption: yes
+    theme: united
+---
+
+## Executive Summary
+"Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it." 
+
+The goal of this project will be to use data from accelerometers on the belt, forearm, arm, and dumbell of six participants to predict whether a participant completed an exercise correctly or not.  
+  
+## Required Packages
+```{r, global_options, eval=FALSE}
+library(caret)
+library(randomForest)
+suppressPackageStartupMessages(library(dplyr))
+```
+
+
+## Data Preprocessing
+
+First, a directory for the data is created and the datasets are downloaded from cloudfront.net if they do not already exist.
+```{r, eval=FALSE}
+if (!file.exists("practical_ml")) {
+  dir.create("practical_ml")
+}
+setwd("practical_ml/")
+
+if (!file.exists('training.csv')) {
+  # Downloading for mac.
+  download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv", "training.csv", method = "curl")
+  download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", "testing.csv", method = 'curl')
+}
+```
+
+
+Then, we read the data into R. In this scenario, the columns with NA values are removed since over 95% of the observations in those columns are NAs, making the data obsolete for prediction. However, these are probably the summary stats for a specific rep, which would be potentially valuable information. If the initial model is not satisfactory, A second pass at the dataset might involve re-including these variables and doing imputation / additional feature creation.
+
+```{r, eval=FALSE}
+data <- read.csv("training.csv", na.strings= c("NA",""," "))
+data <- data[,colSums(is.na(data)) == 0]
+```
+
+
+Here, we are only selecting variables that are related to the measurements from the accelerometers, excluding any
+identifier variables since we cannot generalize those variables to predicting in an outside dataset.
+```{r, eval=FALSE}
+data <- data %>%
+  select(roll_belt:classe)
+```
+
+
+## Model Creation
+Given the number of covariates in this dataset a random forest model was chosen due to its accuracy and ability to capture non-linear relationships.
+
+```{r, eval=FALSE}
+set.seed(1)
+inTrain <- createDataPartition(data$classe, p = .60, list = F)
+training <- data[inTrain,]
+testing <- data[-inTrain,]
+```
+
+
+Using standard randomForest without cross validation since it runs much more quickly. The out-of-bag error rate is only 0.7%. Given this level of accuracy, it's safe to move forward with this model for testing.
+```{r, eval=FALSE}
+fit <- randomForest(training[,-53], training$classe)
+fit
+```
+
+## Model Evaluation and Validation
+The 95% CI for accuracy is 99.98% to 100%. Next step is to carry out validatation on the test set. Given these results, an expected out of sample error rate would be close to the out-of-bag error rate of 0.7% estimated when fitting the random forest model.
+```{r, eval=FALSE}
+predict_train <- predict(fit, training)
+confusionMatrix(training$classe, predict_train)
+```
+
+On a separate test set, the 95% CI for accuracy is still 99.18% to 99.54%. This model seems very robust and deemed satisfactory to move onto predicting on new data. 
+```{r, eval=FALSE}
+predict_test <- predict(fit, testing)
+confusionMatrix(testing$classe, predict_test)
+```
+
+
+## New Predictions
+Reading, preprocessing and predicting on the new dataset with the model created previously.
+```{r, eval=FALSE}
+data_test <- read.csv("testing.csv", na.strings= c("NA",""," "))
+data_test <- data_test[,colSums(is.na(data_test)) == 0]
+
+predict_test2 <- predict(fit, data_test) %>%
+  as.character(predict_test2)
+```
+
+# Write function from submission page.
+```{r, eval=FALSE}
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+pml_write_files(predict_test2)
+```
+
+## Conclusions
+Given the measurement data from the accelerometers attached to their bodies, it's possible to predict the type of   mistake or lack there-of for an exercise completed by a participant with a very simple random forest model.
